@@ -66,7 +66,100 @@ class Cezar:
                 self.key = key
                 decrypted = decrypted+str(key)+". " + self._cipher(self.text,self.key)+'\n'
             file.write(decrypted)
+class Afiliczny:
+    def __init__(self):
+        self.text = ""
+        self.text_pomocniczy = ""
+        self.a = 1  
+        self.b = 0  
+        self.a_inv = 1
 
+    def read_file(self, filename):
+        with open(filename, "r") as file:
+            return file.read()
+
+    def write_file(self, filename, content):
+        with open(filename, "w") as file:
+            file.write(content)
+
+    def encrypt(self):
+        with open("key.txt", "r") as file:
+            keys = file.read().strip().split(",")
+            self.a = int(keys[0])
+            self.b = int(keys[1])
+
+        return self._cipher(self.text, self.a, self.b)
+
+    def decrypt(self):
+        with open("key.txt", "r") as file:
+            keys = file.read().strip().split(",")
+            self.a = int(keys[0])
+            self.b = int(keys[1])
+
+        self.a_inv = self._mod_inverse(self.a, 26)
+        if self.a_inv is None:
+            raise ValueError("Multiplicative key is not invertible.")
+
+        
+        return self._cipher(self.text, self.a_inv, -self.b)
+
+    def _cipher(self, text, a, b):
+        result = []
+        for char in text:
+            if char.isalpha():
+                if char.isupper():
+                    shifted = (a * (ord(char) - ord('A')) + b) % 26 + ord('A')
+                else:
+                    shifted = (a * (ord(char) - ord('a')) + b) % 26 + ord('a')
+                result.append(chr(shifted))
+            else:
+                result.append(char)
+        return ''.join(result)
+
+    def _mod_inverse(self, a, m):
+        for x in range(1, m):
+            if (a * x) % m == 1:
+                return x
+        return None
+
+    def kryptoanaliza_jawna(self):
+        def find_keys():
+            key_candidates = []
+            for a in range(1, 26):
+                if self._gcd(a, 26) == 1:  
+                    for b in range(26):  
+                        self.a = a
+                        self.b = b
+                        decrypted = self._cipher(self.text, self.a, -self.b)
+                        if self.text_pomocniczy in decrypted:
+                            key_candidates.append((a, b))  
+
+            if not key_candidates:
+                raise ValueError("Nie udało się znaleźć klucza.")
+            
+            return key_candidates[0]
+        
+        self.a, self.b = find_keys()
+        decrypted = self._cipher(self.text, self.a, -self.b)
+        
+        return str((self.a, self.b)), decrypted
+
+    def kryptoanaliza_kryptogram(self):
+        with open("decrypt.txt", "w") as file:
+            decrypted = ""
+            for a in range(1, 26):
+                if self._gcd(a, 26) == 1: 
+                    for b in range(26):  
+                        self.a = a
+                        self.b = b
+                        decrypted_text = self._cipher(self.text, self.a, -self.b)
+                        decrypted += f"a={a}, b={b}: " + decrypted_text + '\n'
+            file.write(decrypted)
+
+    def _gcd(self, a, b):
+        while b:
+            a, b = b, a % b
+        return a
 
 
 
@@ -86,26 +179,32 @@ def manage_parses():
 
     if args.c:
         algorithm = Cezar()
-        if args.e:
-            algorithm.text = algorithm.read_file("plain.txt")
-            cipher_text = algorithm.encrypt()
-            algorithm.write_file("crypto.txt", cipher_text)
-        elif args.d:
-            algorithm.text = algorithm.read_file("crypto.txt")
-            plain_text = algorithm.decrypt()
-            algorithm.write_file("plain.txt", plain_text)
-        elif args.j:
-            algorithm.text_pomocniczy = algorithm.read_file("extra.txt")
-            algorithm.text = algorithm.read_file("crypto.txt")
+    elif args.a:
+        algorithm = Afiliczny()
+    else:
+        return 0
+    if args.e:
+        algorithm.text = algorithm.read_file("plain.txt")
+        cipher_text = algorithm.encrypt()
+        algorithm.write_file("crypto.txt", cipher_text)
+    elif args.d:
+        algorithm.text = algorithm.read_file("crypto.txt")
+        plain_text = algorithm.decrypt()
+        algorithm.write_file("plain.txt", plain_text)
+    elif args.j:
+        algorithm.text_pomocniczy = algorithm.read_file("extra.txt")
+        algorithm.text = algorithm.read_file("crypto.txt")
 
-            found,decrypted = algorithm.kryptoanaliza_jawna()
+        found,decrypted = algorithm.kryptoanaliza_jawna()
 
-            algorithm.write_file("key-found.txt",found)
-            algorithm.write_file("decrypt.txt",decrypted)
-        elif args.k:
-            algorithm.text = algorithm.read_file("crypto.txt")
-            algorithm.kryptoanaliza_kryptogram()
-
+        algorithm.write_file("key-found.txt",found)
+        algorithm.write_file("decrypt.txt",decrypted)
+    elif args.k:
+        algorithm.text = algorithm.read_file("crypto.txt")
+        algorithm.kryptoanaliza_kryptogram()
+    
+    else:
+        return 0
 
 
 def main():
