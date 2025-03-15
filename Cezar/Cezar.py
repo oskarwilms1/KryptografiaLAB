@@ -17,12 +17,12 @@ class Cezar:
         self.text = self.text.translate(polish_to_english)
         self.text_pomocniczy = self.text_pomocniczy.translate(polish_to_english)
 
-    def read_file(self, filename):
+    def read_file(self, filename,encoding="utf-8"):
         with open(filename, "r") as file:
             return file.read()
 
     def write_file(self, filename, content):
-        with open(filename, "w") as file:
+        with open(filename, "w",encoding="utf-8") as file:
             file.write(content)
 
     def encrypt(self):
@@ -95,11 +95,11 @@ class Afiliczny:
         self.text_pomocniczy=self.text_pomocniczy.translate(polish_to_english)
 
     def read_file(self, filename):
-        with open(filename, "r") as file:
+        with open(filename, "r",encoding="utf-8") as file:
             return file.read()
 
     def write_file(self, filename, content):
-        with open(filename, "w") as file:
+        with open(filename, "w",encoding="utf-8") as file:
             file.write(content)
 
     def encrypt(self):
