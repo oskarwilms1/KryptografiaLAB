@@ -67,7 +67,7 @@ class Cezar:
         self.key = find_key()
         decrypted = self._cipher(self.text,self.key)
         
-        return str(self.key),decrypted
+        return str((-self.key)%26),decrypted
 
     def kryptoanaliza_kryptogram(self):
         with open("decrypt.txt","w") as file:
@@ -104,7 +104,7 @@ class Afiliczny:
 
     def encrypt(self):
         with open("key.txt", "r") as file:
-            keys = file.read().strip().split(",")
+            keys = file.read().split()
             self.a = int(keys[0])
             self.b = int(keys[1])
 
@@ -112,7 +112,7 @@ class Afiliczny:
 
     def decrypt(self):
         with open("key.txt", "r") as file:
-            keys = file.read().strip().split(",")
+            keys = file.read().split()
             self.a = int(keys[0])
             self.b = int(keys[1])
             
@@ -168,7 +168,7 @@ class Afiliczny:
         self.a, self.b = find_keys()
         decrypted = self._cipher(self.text, self.a, self.b,False)
         
-        return str(self.a)+","+str(self.b), decrypted
+        return str((-self.a)%26)+" "+str(self.b), decrypted
 
     def kryptoanaliza_kryptogram(self):
         with open("decrypt.txt", "w") as file:
@@ -179,7 +179,7 @@ class Afiliczny:
                         self.a = a
                         self.b = b
                         decrypted_text = self._cipher(self.text, self.a, self.b,False)
-                        decrypted += f"a={a}, b={b}: " + decrypted_text + '\n'
+                        decrypted += f"a={(-a)%26}, b={b}: " + decrypted_text + '\n'
             file.write(decrypted)
 
     def _gcd(self, a, b):
@@ -217,14 +217,14 @@ def manage_parses():
     elif args.d:
         algorithm.text = algorithm.read_file("crypto.txt")
         plain_text = algorithm.decrypt()
-        algorithm.write_file("plain.txt", plain_text)
+        algorithm.write_file("decrypt.txt", plain_text)
     elif args.j:
         algorithm.text_pomocniczy = algorithm.read_file("extra.txt")
         algorithm.convert_polish_to_english()
         algorithm.text = algorithm.read_file("crypto.txt")
 
         found,decrypted = algorithm.kryptoanaliza_jawna()
-
+        
         algorithm.write_file("key-found.txt",found)
         algorithm.write_file("decrypt.txt",decrypted)
     elif args.k:
