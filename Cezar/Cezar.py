@@ -7,6 +7,16 @@ class Cezar:
         self.text_pomocniczy = ""
         self.key = 0
 
+    def convert_polish_to_english(self):
+        polish_to_english = str.maketrans({
+        'ą': 'a', 'ć': 'c', 'ę': 'e', 'ł': 'l', 
+        'ń': 'n', 'ó': 'o', 'ś': 's', 'ź': 'z', 'ż': 'z', 
+        'Ą': 'A', 'Ć': 'C', 'Ę': 'E', 'Ł': 'L', 
+        'Ń': 'N', 'Ó': 'O', 'Ś': 'S', 'Ź': 'Z', 'Ż': 'Z'
+    })
+        self.text = self.text.translate(polish_to_english)
+        self.text_pomocniczy = self.text_pomocniczy.translate(polish_to_english)
+
     def read_file(self, filename):
         with open(filename, "r") as file:
             return file.read()
@@ -74,6 +84,16 @@ class Afiliczny:
         self.b = 0  
         self.a_inv = 1
 
+    def convert_polish_to_english(self):
+        polish_to_english = str.maketrans({
+        'ą': 'a', 'ć': 'c', 'ę': 'e', 'ł': 'l', 
+        'ń': 'n', 'ó': 'o', 'ś': 's', 'ź': 'z', 'ż': 'z', 
+        'Ą': 'A', 'Ć': 'C', 'Ę': 'E', 'Ł': 'L', 
+        'Ń': 'N', 'Ó': 'O', 'Ś': 'S', 'Ź': 'Z', 'Ż': 'Z'
+    })
+        self.text = self.text.translate(polish_to_english)
+        self.text_pomocniczy=self.text_pomocniczy.translate(polish_to_english)
+
     def read_file(self, filename):
         with open(filename, "r") as file:
             return file.read()
@@ -95,27 +115,32 @@ class Afiliczny:
             keys = file.read().strip().split(",")
             self.a = int(keys[0])
             self.b = int(keys[1])
-
+            
         self.a_inv = self._mod_inverse(self.a, 26)
         if self.a_inv is None:
             raise ValueError("Multiplicative key is not invertible.")
 
-        
-        return self._cipher(self.text, self.a_inv, -self.b)
+        return self._cipher(self.text, self.a_inv, self.b,False)
 
-    def _cipher(self, text, a, b):
+    def _cipher(self, text, a, b,encrypt = True):
         result = []
         for char in text:
             if char.isalpha():
                 if char.isupper():
-                    shifted = (a * (ord(char) - ord('A')) + b) % 26 + ord('A')
+                    if encrypt:
+                        shifted = (a * (ord(char) - ord('A')) + b) % 26 + ord('A')
+                    else:
+                        shifted = (a * ((ord(char) - ord('A')) - b)) % 26 + ord('A')
                 else:
-                    shifted = (a * (ord(char) - ord('a')) + b) % 26 + ord('a')
+                    if encrypt:
+                        shifted = (a * (ord(char) - ord('a')) + b) % 26 + ord('a')
+                    else:
+                        shifted = (a * ((ord(char) - ord('a')) - b)) % 26 + ord('a')
                 result.append(chr(shifted))
             else:
                 result.append(char)
         return ''.join(result)
-
+    
     def _mod_inverse(self, a, m):
         for x in range(1, m):
             if (a * x) % m == 1:
@@ -123,6 +148,7 @@ class Afiliczny:
         return None
 
     def kryptoanaliza_jawna(self):
+        
         def find_keys():
             key_candidates = []
             for a in range(1, 26):
@@ -130,7 +156,7 @@ class Afiliczny:
                     for b in range(26):  
                         self.a = a
                         self.b = b
-                        decrypted = self._cipher(self.text, self.a, -self.b)
+                        decrypted = self._cipher(self.text, self.a, self.b,False)
                         if self.text_pomocniczy in decrypted:
                             key_candidates.append((a, b))  
 
@@ -140,9 +166,9 @@ class Afiliczny:
             return key_candidates[0]
         
         self.a, self.b = find_keys()
-        decrypted = self._cipher(self.text, self.a, -self.b)
+        decrypted = self._cipher(self.text, self.a, self.b,False)
         
-        return str((self.a, self.b)), decrypted
+        return str(self.a)+","+str(self.b), decrypted
 
     def kryptoanaliza_kryptogram(self):
         with open("decrypt.txt", "w") as file:
@@ -152,7 +178,7 @@ class Afiliczny:
                     for b in range(26):  
                         self.a = a
                         self.b = b
-                        decrypted_text = self._cipher(self.text, self.a, -self.b)
+                        decrypted_text = self._cipher(self.text, self.a, self.b,False)
                         decrypted += f"a={a}, b={b}: " + decrypted_text + '\n'
             file.write(decrypted)
 
@@ -185,6 +211,7 @@ def manage_parses():
         return 0
     if args.e:
         algorithm.text = algorithm.read_file("plain.txt")
+        algorithm.convert_polish_to_english()
         cipher_text = algorithm.encrypt()
         algorithm.write_file("crypto.txt", cipher_text)
     elif args.d:
@@ -193,6 +220,7 @@ def manage_parses():
         algorithm.write_file("plain.txt", plain_text)
     elif args.j:
         algorithm.text_pomocniczy = algorithm.read_file("extra.txt")
+        algorithm.convert_polish_to_english()
         algorithm.text = algorithm.read_file("crypto.txt")
 
         found,decrypted = algorithm.kryptoanaliza_jawna()
