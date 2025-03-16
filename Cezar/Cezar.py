@@ -27,7 +27,7 @@ class Cezar:
 
     def encrypt(self):
         with open("key.txt", "r") as file:
-            self.key = int(file.read())
+            self.key = int(file.read(1))
 
         return self._cipher(self.text, self.key)
 
