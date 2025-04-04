@@ -116,7 +116,7 @@ def manage_parses():
         save_text('crypto.txt', ''.join(encrypted_text))
 
     if args.k:
-        cipher_text = load_text('encrypt.txt').splitlines()
+        cipher_text = load_text('crypto.txt').splitlines()
         decrypted_text = decrypt_with_xor(cipher_text)
         formatted_output = format_output(decrypted_text)
         save_text('decrypt.txt', formatted_output)
